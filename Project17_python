@@ -1,0 +1,32 @@
+# Import required libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+private_ev_charging = pd.read_csv("private_ev_charging.csv")
+public_ev_charging = pd.read_csv("public_ev_charging.csv")
+ev_sales = pd.read_csv("ev_sales.csv")
+
+# How many vehicles were sold in 2018 in total?
+ev_sales_2018 = ev_sales[ev_sales["year"] == 2018].sum()[["sales"]].iloc[0]
+
+#Did vehicle sales and number of private and public ports show the same trend (either increasing or decreasing) between the years 2015 and 2018?
+df_combined = private_ev_charging.merge(public_ev_charging, on="year")
+
+df_complete =df_combined.merge(ev_sales, on="year", how="left")
+df_complete = df_complete.dropna(subset="sales")
+
+fig, ax = plt.subplots()
+
+sns.lineplot(data=df_complete, x='year', y='private_ports', label='Private Ports')
+sns.lineplot(data=df_complete, x='year', y='public_ports', label='Public Ports')
+sns.lineplot(data=df_complete, x='year', y='sales', label='Total Sales', linestyle=':')
+
+ax.set_title('EV Ports and Sales Over Time')
+ax.set(xlabel = 'Year', ylabel='Count')
+
+ax.legend(loc='upper left')
+
+plt.show()
+
+trend = "same"
