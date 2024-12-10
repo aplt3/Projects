@@ -1,0 +1,20 @@
+# Importing pandas and matplotlib
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Read in the Netflix CSV as a DataFrame
+netflix_df = pd.read_csv("netflix_data.csv")
+
+df_1990s = netflix_df[(netflix_df["release_year"] >= 1990) & (netflix_df["release_year"] < 2000)]
+df_movie = df_1990s[df_1990s["type"] == "Movie"]
+
+plt.hist(df_movie['duration'])
+plt.title('Distribution of Movie Durations in the 1990s')
+plt.xlabel('Duration (minutes)')
+plt.ylabel('Number of Movies')
+plt.show()
+
+duration = int(df_movie["duration"].mode())
+
+short_action_df = df_1990s[(df_1990s["duration"] < 90) & (df_1990s["genre"] == "Action")]
+short_movie_count = len(short_action_df)
