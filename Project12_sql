@@ -1,0 +1,52 @@
+-- highest_donation_assignments
+WITH donor AS(
+SELECT
+	don.assignment_id
+	, ROUND(SUM(don.amount), 2) AS rounded_total_donation_amount
+	, dns.donor_type
+FROM donations don
+	INNER JOIN donors dns ON don.donor_id = dns.donor_id
+GROUP BY don.assignment_id
+	, dns.donor_type
+)
+SELECT
+    ag.assignment_name
+    , ag.region
+    , d.rounded_total_donation_amount
+    , d.donor_type
+FROM assignments ag
+	INNER JOIN donor d ON ag.assignment_id = d.assignment_id
+ORDER BY d.rounded_total_donation_amount DESC
+LIMIT 5;
+
+
+-- top_regional_impact_assignments
+WITH num_donations AS (
+SELECT
+	assignment_id
+	, COUNT(donation_id) AS num_total_donations
+FROM donations
+GROUP BY assignment_id
+),
+
+	ranking AS(
+	SELECT
+		ag.assignment_name
+		, ag.region
+		, ag.impact_score
+		, ROW_NUMBER() OVER (PARTITION BY ag.region ORDER BY ag.impact_score DESC) AS rank_in_region
+		, nd.num_total_donations
+		, nd.assignment_id
+	FROM assignments ag
+		INNER JOIN num_donations nd ON ag.assignment_id = nd.assignment_id
+		WHERE nd.num_total_donations > 0
+	)
+
+SELECT
+	assignment_name
+	, region
+	, impact_score
+	, num_total_donations
+FROM ranking
+WHERE rank_in_region = 1
+ORDER BY region;
