@@ -1,0 +1,56 @@
+-- top_five_products_each_category
+WITH category AS(
+	SELECT
+		products.category
+		, products.product_name
+		, ROUND(CAST(SUM(orders.sales) AS NUMERIC),2) AS product_total_sales
+		, ROUND(CAST(SUM(orders.profit) AS NUMERIC),2) AS product_total_profit
+		, ROW_NUMBER() OVER (PARTITION BY products.category ORDER BY SUM(orders.sales) DESC) product_rank
+	FROM orders
+		INNER JOIN products ON orders.product_id = products.product_id
+	GROUP BY products.category
+			, products.product_name
+)
+
+SELECT
+	category
+	, product_name
+	, product_total_sales
+	, product_total_profit
+	, category.product_rank
+FROM category
+WHERE 1=1
+	AND category.product_rank <= 5
+ORDER BY category ASC, product_total_sales DESC
+;
+
+
+-- impute_missing_values
+WITH missing AS(
+SELECT
+	product_id
+	, discount
+	, market
+	, region
+	, sales
+	, quantity
+FROM orders
+WHERE quantity IS NULL
+),
+
+	unit_prices AS(
+		SELECT
+			orders.product_id
+			, CAST(orders.sales / orders.quantity AS NUMERIC) AS unit_price
+		FROM missing
+			LEFT JOIN orders ON missing.product_id = orders.product_id
+							AND missing.discount = orders.discount
+		WHERE orders.quantity IS NOT NULL
+	)
+
+SELECT DISTINCT
+	missing.*
+	, ROUND(CAST(missing.sales AS NUMERIC) / unit_prices.unit_price, 0) AS calculated_quantity
+FROM missing
+	INNER JOIN unit_prices ON missing.product_id = unit_prices.product_id
+;
