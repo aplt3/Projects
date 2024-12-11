@@ -1,0 +1,15 @@
+--revenue_by_product_line
+SELECT
+	product_line
+	, CASE WHEN EXTRACT(MONTH FROM date) = 6 THEN 'June'
+		   WHEN EXTRACT(MONTH FROM date) = 7 THEN 'July'
+		   ELSE 'August'
+	  END AS month
+	, warehouse
+	, SUM(total - payment_fee) AS net_revenue
+FROM sales
+WHERE client_type = 'Wholesale'
+GROUP BY product_line
+		, month
+		, warehouse
+ORDER BY product_line, month, net_revenue DESC;
